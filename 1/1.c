@@ -1,25 +1,18 @@
 #include <stdlib.h>
 #include <stdio.h>
-#include<stdbool.h>
-#define max_lenght 1000
-
-int i = 0;
-
-struct stack {
-	int value;
-	struct stack* next;
-};
+#include <stdbool.h>
+#include "stack.h"
 
 
-void push(int value, struct stack** current);
-bool empty(struct stack* current_element);
+
 int check(int kind, struct stack** current_element, bool is_opening);
-void push(int value, struct stack** current);
-int pop(struct stack** current_element);
+bool if_bracket(char symbol, bool* is_opening, int* kind, int number_of_types, char* opening, char*  closing);
+int read(int number_of_types, char* opening, char*  closing); // 0 - right 1 - error 2 - wrong; had to leave reading from input here for one-by-one input
+void print_result(int result_code);
+char get_symbol(); // '\n' must be a sign of the end of the brackets sequence
 
 bool if_bracket(char symbol, bool* is_opening, int* kind, int number_of_types, char* opening, char*  closing) {
 	int i;
-
 	for (i = 0; i < number_of_types; i++) {
 		if (opening[i] == symbol) {
 			*is_opening = 1;
@@ -35,9 +28,6 @@ bool if_bracket(char symbol, bool* is_opening, int* kind, int number_of_types, c
 	return 0;
 };
 
-bool empty(struct stack* current_element) {
-	return (current_element == NULL);
-}
 
 
 int check(int kind, struct stack** current_element, bool is_opening) {
@@ -50,15 +40,19 @@ int check(int kind, struct stack** current_element, bool is_opening) {
 	if (compared == kind) return 1;
 	printf("Achieved.");
 	return 0;
-}
+};
 
-int read(char* string_of_brackets, int number_of_types, char* opening, char*  closing) { // 0 - right 1 - err 2 - wrong
+char get_symbol() { // '\n' must be a sign of the end of the brackets sequence
+	return fgetc(stdin);
+};
+
+int read(int number_of_types, char* opening, char*  closing) {
 	char symbol;
 	bool is_opening;
 	int kind;
 	struct stack* current_element = NULL;
 
-	symbol = fgetc(stdin);
+	symbol = get_symbol();
 
 	while (symbol != '\n') {
 		if (if_bracket(symbol, &is_opening, &kind, number_of_types, opening, closing)) {
@@ -69,39 +63,14 @@ int read(char* string_of_brackets, int number_of_types, char* opening, char*  cl
 			return 1;
 		}
 
-		symbol = fgetc(stdin);
+		symbol = get_symbol();
 	}
+
 	if (!empty(current_element)) return 2;
 	return 0;
 };
 
-void push(int value, struct stack** current) {
-	struct stack* head = (struct stack*)malloc(sizeof(struct stack));
-	head->value = value;
-	head->next = *current;
-	*current = head;
-};
-
-int pop(struct stack** current_element) {
-	if (empty(*current_element)) return 0;
-	int value = (*current_element)->value;
-	*current_element = (*current_element)->next;
-	return value;
-}
-
-
-
-
-int main() {
-
-	char string_of_brackets[max_lenght];
-
-#define number_of_types 4
-	char opening[number_of_types] = { '(', '[', '{', '<' };
-	char closing[number_of_types] = { ')', ']', '}', '>' };
-
-	int result_code = read(string_of_brackets, number_of_types, opening, closing);
-
+void print_result(int result_code) {
 	switch (result_code) {
 	case 0: {
 				printf("The sequence of brackets is right!\n");
@@ -116,5 +85,13 @@ int main() {
 				break;
 	}
 	}
+};
+
+int main() {
+#define number_of_types 4
+	char opening[number_of_types] = { '(', '[', '{', '<' };
+	char closing[number_of_types] = { ')', ']', '}', '>' };
+	int result_code = read(number_of_types, opening, closing);
+	print_result(result_code);
 	return 0;
-}
+};
