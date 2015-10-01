@@ -1,8 +1,17 @@
 #include <stdio.h>
 #include <stdlib.h>
+
+/*TODO: 1. Follow your codestyle. 
+       	   There are some missed spaces and so on.
+	2. Comments about function input must be with function declaration.
+	   Comments about function implementation(some tips, explanations) must be with function description.	 
+*/
+
 int _strlen (char* string) { // input MUST end with \0
-    int i;
-    for (i = 0; string[i]!='\0'; i++);
+    int i;	  //TODO: Not initialized. I see, that it will be initialized in the next line, but that's the rule you should obey
+		  //      It will help you in future. Ilya Ded calls it "culture of coding", if I translate it right.
+	
+    for (i = 0; string[i]!='\0'; i++);//No codestyle
     return i;
 };
 
@@ -34,7 +43,8 @@ void swap_chars (char* a, char* b) {
 }
 
 char* _itoa(int number) {
-    char* output = malloc(sizeof(char)*13);
+    char* output = malloc(sizeof(char)*13);// SUGGESTION: Why here dinamic? It makes user free memory.
+					   // Why not following? User uses static memory with 33 chars. 
     char buffer;
     int j = 0, i = 0, temp = abs(number), current;
     
