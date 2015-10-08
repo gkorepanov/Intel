@@ -45,7 +45,7 @@ void _itoa(int number, char* output) {
     int j = 0, i = 0, temp = abs(number), current;
     
     while (temp) {
-        current=temp%10;
+        current=temp%10;//something is strange with your codestyle
         output[i]=current+(int)'0';
         temp-=current;
         temp/=10;
