@@ -59,8 +59,8 @@ int read(int number_of_types, char* opening, char*  closing) {
     char symbol = 0;
     int is_opening = 0;
     int kind = 0;
-    stack* current_element = NULL;
-
+    stack* current_element = NULL;// TODO. It's very dangerous to use NULL. Moreover you don't check anywhere.
+                                  // Implement init(), it's like constructor in c++
     symbol = get_symbol();
 
     while (symbol != '\n') {
