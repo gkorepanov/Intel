@@ -19,12 +19,16 @@
    3) Using list is more effective to my mind (I do not state, just trying to understand).
 
 Every time I push new element to stack, I need only sizeof(stack) bytes of available memory and I don't need to copy anything each time, as I had to using realloc(). You may object that I will get a 'distorted in memory' stack, i.e. there will be lots of stack's memory cells divided by lots of other cells, which makes processor work slower (according to your words). So we can just malloc memory with reservation for future pushes (just like in dynamic array), so that we could just put new elements to that allocated memory untill it is filled. Finally we would have few segments of memory, containing parts of stack, which is almoust equal to array, but more effective a bit (I believe so!).*/
-  
+//First comments and code should be 80 symbols in line. It's easier to read.
+//I'll answer about list and dynamic array after lecture.
 typedef struct _stack {
     int value;
     struct _stack* next;
 } stack;
+//Another point is the fact, that you pass ** to almost every func. You stack is actually one element of list. 
+//But should be some blackbox with functions.
 void free_stack(stack** current_element);
 void push(int value, stack** current);
 int pop(stack** current_element);
-bool is_empty(stack* current_element);
+bool is_empty(stack* current_element);// current_elem == null does really mean that it's empty? If some bad guy spoil it
+                                      // with current_elem = null. And then pass it to is_empty. Will it be true?    
