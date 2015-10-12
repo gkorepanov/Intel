@@ -1,34 +1,27 @@
-#include <stdlib.h>
-#include <stdio.h>
-#include <stdbool.h>
+typedef int value_t; // for any type support
 
-/*
-    SUGGETION: I'd better implement stack on array in this case.
-           What's the reason to use list? If you have a lot of "push"s and "pop"s, 
-           there will be many memory allocations and "free"s.
-           You may use static array, if you anticipate certain number of element, or array with changing size.
-           In last case, I mean something like c++'s <vector>. But in c you have to implement yourself.
+typedef struct _elem {
+    value_t value;
+    struct _elem* next;
+} elem_t;
 
-           Nevetheless, on lectures Ilya Ded will tell you about stack on static array, as far as I know.
-*/
+typedef struct {
+    int size;
+    elem_t* head;
+} stack_t;
 
-/*
-   It's not absolutely clear for me why using array here is better.
-   1) Static array is not suitable: the sequence of brackets may be extremely large.
-   2) Dynamic array as it implementes in <vector> means using realloc each time I do run out of memory. In other words, it is need that I have an empty memory area large enough each time I call realloc() and, moreover, it means copying all the values to a new cells of memory which is likely to have O(n) complexity.
-   3) Using list is more effective to my mind (I do not state, just trying to understand).
+void elem_ctor(elem_t* This);
+void elem_dtor(elem_t* This);
+int elem_ok(elem_t* This);
 
-Every time I push new element to stack, I need only sizeof(stack) bytes of available memory and I don't need to copy anything each time, as I had to using realloc(). You may object that I will get a 'distorted in memory' stack, i.e. there will be lots of stack's memory cells divided by lots of other cells, which makes processor work slower (according to your words). So we can just malloc memory with reservation for future pushes (just like in dynamic array), so that we could just put new elements to that allocated memory untill it is filled. Finally we would have few segments of memory, containing parts of stack, which is almoust equal to array, but more effective a bit (I believe so!).*/
-//First comments and code should be 80 symbols in line. It's easier to read.
-//I'll answer about list and dynamic array after lecture.
-typedef struct _stack {
-    int value;
-    struct _stack* next;
-} stack;
-//Another point is the fact, that you pass ** to almost every func. You stack is actually one element of list. 
-//But should be some blackbox with functions.
-void free_stack(stack** current_element);
-void push(int value, stack** current);
-int pop(stack** current_element);
-bool is_empty(stack* current_element);// current_elem == null does really mean that it's empty? If some bad guy spoil it
-                                      // with current_elem = null. And then pass it to is_empty. Will it be true?    
+void stack_ctor(stack_t* This);
+void stack_dtor(stack_t* This);
+int stack_ok(stack_t* This);
+
+void stack_push(stack_t* This, value_t value);
+int stack_pop(stack_t* This); // returns 0 if succeed 
+value_t stack_top(stack_t* This);
+int is_empty(stack_t* This);
+
+void stack_dump(stack_t* This);
+void elem_dump(elem_t* This);
