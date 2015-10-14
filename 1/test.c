@@ -7,7 +7,7 @@ int main() {
     int number = 1;
     
     stack_t* stack;   
-    stack = malloc(sizeof(stack_t)); 
+    stack = malloc(sizeof(stack_t)); // this can be inside ctor.
     
     stack_ctor(stack);
     
