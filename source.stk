@@ -1,0 +1,13 @@
+push 2
+print
+push 3
+add
+push 5
+push 7
+push 8
+dump
+print
+mul
+print
+pop
+end
