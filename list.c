@@ -71,5 +71,5 @@ void list_dump(list_t* This) {
         printf("%d ", This->value);
         This = This->next;
     }
-    printf("\n\n");
+    printf("\n");
 }

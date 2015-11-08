@@ -58,6 +58,8 @@ bool stack_ok(stack_t* This) {
 }
 
 void stack_dump(stack_t* This) {
-    printf("-----------------------------------\nSTACK:\nsize: %d\n", This -> size);
+    printf("-----------------------------------\n"\
+           "STACK:\nsize: %d\n", This -> size);
     list_dump(This->head);
+    printf("-----------------------------------\n");
 }
