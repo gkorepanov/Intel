@@ -30,9 +30,9 @@ void list_dtor(list_t* This) {
 void list_put(list_t* This, int value) {
     assert(list_ok(This));
 
-    list_t* new = calloc(1, sizeof(list_t));
-    list_ctor(new, This->value, This->next);
-    This->next = new;
+    list_t* new_ = (list_t*)calloc(1, sizeof(list_t));
+    list_ctor(new_, This->value, This->next);
+    This->next = new_;
     This->value = value;
     assert(list_ok(This));
 }

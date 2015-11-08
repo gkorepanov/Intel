@@ -8,7 +8,7 @@ void stack_ctor(stack_t* This) {
     assert(This && "Passed NULL pointer to constructor");
 
     This->size = 0;
-    This->head = calloc(1, sizeof(list_t));
+    This->head = (list_t*)calloc(1, sizeof(list_t));
     list_ctor(This->head, 0, NULL);
 
     assert(stack_ok(This));
