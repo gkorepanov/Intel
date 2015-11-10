@@ -6,6 +6,8 @@
 #include <ctype.h>
 #include "stack.h"
 #include "stack_proc.h"
+#include "register.h"
+
 
 #define DEBUGMODE 1 //1 to print logs (alerts.h for implementation)
 
