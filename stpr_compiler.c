@@ -45,7 +45,7 @@ bool get_line(line_t* line, char str[]) { // returns 0 if empty string or commen
     } while (token);
 
     line->num = i;
-    DBGPRINT("String: %s Keyword: \"%s\"\n", str, line->words+0);
+    DBGPRINT("String: %s Keyword: \"%s\"\n", str, line->words[0]);
     DBGPRINT("String \"%s\" transformed into line_t.\n", str);
 
     return 1;
@@ -62,10 +62,10 @@ bool load_function(FILE* source, vararray* lines) { //return 0 if no ret found
 
         var_push(lines, &cur_line);
 
-        if (is_lable(cur_line.words))
+        if (is_lable(cur_line.words[0]))
                 USERERR("Found label in function implementation.\n");
 
-        if (!strcmp(cur_line.words, "ret"))
+        if (!strcmp(cur_line.words[0], "ret"))
             return 1;
     }
 
@@ -77,11 +77,13 @@ void load_file(FILE* source, vararray* lines) {
     line_t cur_line;
     vararray* func_code = var_alloc(sizeof(line_t), 128);
 
+    DBGPRINT("Lines: %d\n", (int)(lines->nmax));
+
     while (fgets(str, 200, source)) {
         if (!get_line(&cur_line, str))
             continue;
 
-        if (!strcmp(cur_line.words+is_lable(cur_line.words), "proc")) {
+        if (!strcmp(cur_line.words[is_lable(cur_line.words[0])], "proc")) {
             var_push(func_code, &cur_line);
 
             if(!load_function(source, func_code))
@@ -92,7 +94,8 @@ void load_file(FILE* source, vararray* lines) {
             var_push(lines, &cur_line);
         }
 
-        DBGPRINT("String: %s\nKeyword: \"%s\"\n", str, cur_line.words+0);
+        DBGPRINT("Lines: %d\n", (int)(lines->nmax));
+        DBGPRINT("String: %s\nKeyword: \"%s\"\n", str, cur_line.words[0]);
     }
     
     for (int i = 0; i < func_code->nmax; i++)
@@ -117,8 +120,11 @@ int get_type(char str[]) {
 }
 
 char get_modif(char str[]) {
+    DBGPRINT("Got str: %s\n", str);
+
     if (get_reg(str)) 
         return 'r';
+
     for (int i = 0; i < strlen(str); i++)
         if (!isdigit(str[i]))
             return 'w';
@@ -136,45 +142,74 @@ void put_lf(char str[], vararray* funcs, int shift) {
     strcpy(cur_func.name, str);
     cur_func.shift = shift;
     var_push(funcs, &cur_func);
+    DBGPRINT("NAME: \"%s\", POS: %d;\n", str, shift);
 }
 
 int get_lf(char str[], vararray* funcs, int shift, int step) {
-    for (int i = 0; i < (funcs->nmax); i++) 
-        if (!strcmp(str, ((func_t*)var_get(funcs, i))->name))
+    DBGPRINT("NAME: \"%s\", shift of call/jump: %d\n", str, shift);
+
+    for (int i = 0; i < (funcs->nmax); i++) {
+
+        DBGPRINT("NAME: %s; SHIFT: %d\n",  ((func_t*)var_get(funcs, i))->name, (((func_t*)var_get(funcs, i))->shift-shift));
+     
+        if (!strcmp(str, ((func_t*)var_get(funcs, i))->name)) {
             return (((func_t*)var_get(funcs, i))->shift-shift);
+        }
+    }
 
     if (step > 1)
-    USERERR("No function found for %s\n", str);
+        USERERR("No function/label found for %s\n", str);
+}
+
+int modif_cmp(char str1[], const char* str2) {
+    int len1 = strlen(str1);
+    int len2 = strlen(str2);
+    
+
+    if (len1!=len2)
+        return 0;
+
+    for (int i = 0; i < len1; i++) {
+        if ((len1 == 1) && (str1[i] == 'w') && ((str2[i] == 'l') || (str2[i] == 'f'))) 
+            {}
+        else if (str1[i] != str2[i])
+            return 0;
+    }
+
+    return 1;
 }
 
 void put_cmd(vararray* binary, line_t* cur_line, int j, vararray* labels, vararray* funcs, int step) {
-    int i = j, argc = 0, to_push = 0;
+    int i = j, argc = 0, to_push = 0, pos = 0;;
     char cmd_num = 0;
 
-    char* keyword = cur_line->words+j;
+    char* keyword = cur_line->words[j];
     char modif[4], words[2];
     memset(modif, 0, sizeof(modif));
     memset(words, 0, sizeof(words));
 
     for (i = j+1; i < cur_line->num; (argc++, i++)) {
-        words[argc] = cur_line->words[i];
+        strcpy(&words[argc], cur_line->words[i]);
         modif[argc] = get_modif(&words[argc]);
     }
 
 
-    DBGPRINT("Keyword: %s\n", keyword);
+
 
 #define CMD_(number_, keyword_, argc_, modif_, code_)\
-    if ((!strcmp(keyword, #keyword_)) && (!strncmp(modif, #modif_, 1)) && (argc_ == argc)) {\
-        strcpy(modif, #modif_);\
+    if ((!strcmp(keyword, #keyword_)) && (modif_cmp(modif, modif_)) && (argc_ == argc)) {\
+        strcpy(modif, modif_);\
         cmd_num = number_;\
     } else 
 
 #include "stpr_cmd.h"
 
 #undef CMD_
-    USERERR("No command found for \"%s\"\n", cur_line->words);
+    USERERR("No command found for \"%s\"\n", cur_line->words[0]);
 
+   
+    DBGPRINT("Number: %d, keyword: \"%s\" MODIF: \"%s\" argc: %d\n", cmd_num, keyword, modif, argc);
+    pos = binary->nmax;
 
     var_push(binary, &cmd_num);
 
@@ -189,11 +224,11 @@ void put_cmd(vararray* binary, line_t* cur_line, int j, vararray* labels, vararr
                 break;
             }
             case 'f': {
-                to_push = get_lf(&words[i], funcs, binary->nmax, step);
+                to_push = get_lf(&words[i], funcs, pos, step);
                 break;
             }
-            case 'b': {
-                to_push = get_lf(&words[i], funcs, binary->nmax, step);
+            case 'l': {
+                to_push = get_lf(&words[i], labels, pos, step);
                 break;
             }
 
@@ -204,6 +239,9 @@ void put_cmd(vararray* binary, line_t* cur_line, int j, vararray* labels, vararr
         }
         var_pushn(binary, &to_push, sizeof(int));
     }
+
+    DBGPRINT("Num of elems in bin: %d;\n"\
+            "-----------------------------\n", (int)binary->nmax);
 }
 
 // step = 1 - no  control. step = 2 - if no label or func found, throw err
@@ -213,25 +251,28 @@ vararray* compile(vararray* lines, vararray* labels, vararray* funcs, int step) 
     int i = 0, j = 0; // i - line number; j - word number
     int type = 0;
     line_t* cur_line = NULL;
+    char word[MAX_WORD_LENGTH];
 
+    DBGPRINT("Lines: %d\n", (int)(lines->nmax));
     for (i = 0; i < (lines->nmax); i++) {
         j = 0;
 
         cur_line = (line_t*)var_get(lines, i);
-        DBGPRINT("Keyword: \"%s\"\n", cur_line->words+j);
-        type = get_type(cur_line->words+j);
-
+        DBGPRINT("Keyword: \"%s\"\n", cur_line->words[j]);
+        type = get_type(cur_line->words[j]);
+        DBGPRINT("Type: %d\n", type);
 
         if (type == FUNC) {
-                put_lf(cur_line->words+j+1, funcs, binary->nmax);
+                put_lf(cur_line->words[j+1], funcs, binary->nmax);
                 continue;
         }
 
         if (type == LABEL) {
-                *(cur_line->words+j+strlen(cur_line->words+j)-1) = '\0';
-                put_lf(cur_line->words+j, labels, binary->nmax);
+                strcpy(word, cur_line->words[j]);
+                word[strlen(word)-1] = '\0';
+                put_lf(word, labels, binary->nmax);
                 j++;
-                get_type(cur_line->words+j);
+                get_type(cur_line->words[j]);
         }
 
         if (type == EMPTY) 
@@ -271,9 +312,26 @@ int main(int argc, char* argv[]) {
 
     load_file(source, lines);
 
+    DBGPRINT("-------------------------------------------------------------\n"\
+            "FILE LOADED.\n"\
+            "--------------------------------------------------------------\n");
+
     compile(lines, labels, funcs, 1);
+    
+    DBGPRINT("-------------------------------------------------------------\n"\
+            "FIRST COMPILATION RUNNED.\n"\
+            "--------------------------------------------------------------\n");
+
 
     binary = compile(lines, labels, funcs, 2);
+
+    DBGPRINT("-------------------------------------------------------------\n"\
+            "SECOND COMPILATION RUNNED.\n."\
+            "--------------------------------------------------------------\n");
+
+
+
+    DBGPRINT("Size of binary: %d\n", (int) binary->nmax);
 
     fwrite(binary->mem, sizeof(char), binary->nmax, dest);
 
