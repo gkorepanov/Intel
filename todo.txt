@@ -1,0 +1,23 @@
+1) Duplicated labels control.
+
+2) No jumps into function from outside it.
+
+3) vararray.c var_ok() function
+
+4) load_function and compile duplicated code
+
+5) Description of tough places
+
+6) Documentation
+
+7) modif - "w" "l" "f"  (!THINK!)
+
+8) Each ret should be paired with proc
+
+9) comments after any line:
+
+	mov ax 9 //some comment
+
+10) move #include's from .h to .c (!THINK)
+
+11) ask about makefile
