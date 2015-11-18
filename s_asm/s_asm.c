@@ -165,7 +165,7 @@ int get_lf(char str[], vararray* funcs, int shift, int step) {
         DBGPRINT("NAME: %s; SHIFT: %d\n",  ((func_t*)var_get(funcs, i))->name, (((func_t*)var_get(funcs, i))->shift-shift));
      
         if (!strcmp(str, ((func_t*)var_get(funcs, i))->name)) {
-            return (((func_t*)var_get(funcs, i))->shift-shift);
+            return (((func_t*)var_get(funcs, i))->shift-shift);//QUESTION:why shift relates to another shift?
         }
     }
 
@@ -192,7 +192,7 @@ int modif_cmp(char str1[], const char* str2) {
 }
 
 void put_cmd(vararray* binary, line_t* cur_line, int j, vararray* labels, vararray* funcs, int step) {
-    int i = j, argc = 0, to_push = 0, pos = 0;;
+    int i = j, argc = 0, to_push = 0, pos = 0;
     char cmd_num = 0;
 
     char* keyword = cur_line->words[j];
@@ -201,12 +201,12 @@ void put_cmd(vararray* binary, line_t* cur_line, int j, vararray* labels, vararr
     memset(words, 0, sizeof(words));
 
     for (i = j+1; i < cur_line->num; (argc++, i++)) {
-        DBGPRINT("1/Argument %d: %s\n", 0, words[0]);
+        DBGPRINT("1/Argument %d: %s\n", 0, words[0]);//What's this debugoutput tell you?
         strcpy(words[argc], cur_line->words[i]);
         DBGPRINT("2/Argument %d: %s\n", 0, words[0]);
-	DBGPRINT("Argument %d: %s\n", argc, words[argc]);
+	DBGPRINT("Argument %d: %s\n", argc, words[argc]);//QUESTION: Why you repeat the same dbgoutput here
         modif[argc] = get_modif(words[argc]);
-        DBGPRINT("Argument %d: %s\n", 0, words[0]);
+        DBGPRINT("Argument %d: %s\n", 0, words[0]);// and here?
     }
 
 	DBGPRINT("Argument %d: %s\n", 0, words[0]);
@@ -225,10 +225,9 @@ void put_cmd(vararray* binary, line_t* cur_line, int j, vararray* labels, vararr
 
    
     DBGPRINT("Number: %d, keyword: \"%s\" MODIF: \"%s\" argc: %d\n", cmd_num, keyword, modif, argc);
-    pos = binary->nmax;
+    pos = binary->nmax;//QUESTION: What's purpose of it?
 
     var_push(binary, &cmd_num);
-
     for (i = 0; i < argc; i++) {
         switch (modif[i]) {
             case 'r': {
@@ -250,7 +249,7 @@ void put_cmd(vararray* binary, line_t* cur_line, int j, vararray* labels, vararr
             }
 
             default: {
-                FATALERR("Modif failure. Act_modif: %s\n", modif);
+                FATALERR("Modif failure. Act_modif: %s\n", modif);//I think it's debug error. User shouldn't know it
                 break;
             }
         }

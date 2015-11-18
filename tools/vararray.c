@@ -35,7 +35,7 @@ void _var_grow(vararray* array) {
 
 void var_put(vararray* array, off_t idx, const void* data) {
 	if (idx >= array->nmax) {
-		if (idx*10 > 7*array->sz) {
+		if (idx*10 > 7*array->sz) {// if you have sizes == powers of two, euristics may be other, as I remember.
 			// fill factor exceeded
 			_var_grow(array);
 		}
@@ -54,7 +54,9 @@ void var_push(vararray* array, void* data) {
     (array->nmax)++;
 }
 
-void var_pushn(vararray* array, void* data, size_t elem_size) {
+void var_pushn(vararray* array, void* data, size_t elem_size) {//if you have pushn, which makes array to accept types with more bytes, 
+                                                        //than its own type, shouldn't you have getn for these types.
+                                                        //otherwise, they will be read wrong.   
 	if (array->nmax*10 > 5*array->sz) {
 		/* fill factor exceeded */
 		_var_grow(array);
