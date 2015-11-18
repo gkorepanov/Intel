@@ -1,13 +1,6 @@
-#include "alerts.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include <assert.h>
-#include <string.h>
-#include <ctype.h>
-#include "stack.h"
-#include "stack_proc.h"
+#include "s_proc.h"
 
-#define DEBUGMODE 1 //1 to print logs (alerts.h for implementation)
+#define DEBUGMODE 0 //1 to print logs (alerts.h for implementation)
 
 
 void proc_load(proc_t* This, FILE* source) {
@@ -34,6 +27,8 @@ void proc_load(proc_t* This, FILE* source) {
         fclose(debugfile);
     }
 }
+
+
 void proc_ctor(proc_t* This) {
     if (!This) 
         FATALERR("Passed NULL pointer to proc c-tor");
@@ -42,7 +37,12 @@ void proc_ctor(proc_t* This) {
     This->pos = 0;
     This->cmds = (char*)calloc(10, sizeof(char));
     This->stack = (stack_t*)calloc(1, sizeof(stack_t));
+    This->stack_ret = (stack_t*)calloc(1, sizeof(stack_t));
+
     stack_ctor(This->stack);
+    stack_ctor(This->stack_ret);
+
+    This->regs = reg_init();
 
     if (!proc_ok(This)) 
         FATALERR("Proc c-tor error");
@@ -53,8 +53,16 @@ void proc_dtor(proc_t* This) {
         FATALERR("Proc d-tor got bad struct");
 
     free(This->cmds);
+
     stack_dtor(This->stack);
+    stack_dtor(This->stack_ret);
+
     free(This->stack);
+    free(This->stack_ret);
+    
+    reg_free(This->regs);
+
+
     This->size = -1;
     This->pos = -1;
 }
@@ -62,11 +70,14 @@ void proc_dtor(proc_t* This) {
 bool proc_ok(proc_t* This) {
     return This &&
         This->cmds &&
+        This->regs &&
         (This->size >= 0) &&
         (This->pos >= 0) &&
         (This->pos <= This->size) &&
         This->stack &&
-        stack_ok(This->stack);
+        This->stack_ret &&
+        stack_ok(This->stack) &&
+        stack_ok(This->stack_ret);
 }
     
 void proc_run(proc_t* This) {
@@ -77,21 +88,25 @@ void proc_run(proc_t* This) {
 
     while ((This->cmds)[This->pos]) {
         switch((This->cmds)[This->pos]) {
-#define CMD_(number, keyword, argc, code)\
+#define CMD_(number, keyword, argc, modif, code)\
             case number: {\
                 if (DEBUGMODE) {\
-                    printf("Command: %s", #keyword);\
-                    if (argc)\
-                        printf(" %d\n", *(int*)(This->cmds+This->pos+1));\
-                    else\
+                    int j = argc;\
+                    printf("-------------------------------------------------------------\n"\
+                            "Pos: %d\nCommand: %s(%d)", This->pos, #keyword, number);\
+                    while (j) {\
+                        printf(" %d", *(int*)(This->cmds+This->pos+1+(argc-j)*4));\
+                        j--;\
+                    }\
                     printf("\n");\
+                    getchar();\
                 }\
                 code;\
                 This->pos += (1+argc*4);\
                 break;\
             };
 
-#include "stack_cmd.h"
+#include "../s_common/s_cmdlist.h"
 
 #undef CMD_
             default:
@@ -103,8 +118,7 @@ void proc_run(proc_t* This) {
             FATALERR("STRUCT proc corrupted while executing code\n"\
                      "Pos: %d Command number: %d\n", This->pos, (int)(This->cmds)[This->pos]);
 
-        if (DEBUGMODE) 
-            DBGPRINT("Pos: %d Command number: %d\n", This->pos, (int)(This->cmds)[This->pos]);
+            DBGPRINT("Done.\n");
     }
 
     printf("END\n");
@@ -137,6 +151,8 @@ int main(int argc, char* argv[]) {
     proc_load(proc, source);
     proc_run(proc);
     proc_dtor(proc);
+    
+    DBGPRINT("Passed all.\n");
 
     fclose(source);
     return 0;

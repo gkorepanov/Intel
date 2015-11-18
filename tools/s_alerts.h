@@ -1,5 +1,5 @@
-#ifndef ALERTS
-#define ALERTS
+#ifndef S_ALERTS
+#define S_ALERTS
 
 #define USERERR(...)\
 {\
@@ -19,8 +19,11 @@
 
 #define DBGPRINT(...)\
 {\
-    if (DEBUGMODE)\
+    if(DEBUGMODE) {\
         printf(__VA_ARGS__);\
+    }\
 }
 
+
+/*printf("Function: %s |     ", __PRETTY_FUNCTION__);*/
 #endif
